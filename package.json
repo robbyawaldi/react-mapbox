@@ -1,5 +1,5 @@
 {
-  "name": "react-mapbox",
+  "name": "@robbyawaldi/react-mapbox",
   "version": "0.0.0",
   "description": "A React binding of Mapbox",
   "main": "dist/cjs/index.js",
