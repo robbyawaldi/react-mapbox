@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 
 export const MapContext = createContext<mapboxgl.Map | null>(null);
@@ -21,6 +21,7 @@ const MapContainer = ({
   children,
 }: MapContainerProps) => {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
+  const mapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     mapboxgl.accessToken = accessToken;
@@ -31,6 +32,7 @@ const MapContainer = ({
     setMap(mapInstance);
     return () => {
       setMap(null);
+      if (mapRef.current) mapRef.current.innerHTML = "";
     };
   }, [mapOption]);
 
@@ -39,6 +41,7 @@ const MapContainer = ({
       <div className="relative">
         <div
           id={mapOption.container as string}
+          ref={mapRef}
           style={{ height, width: "100%" }}
         />
         {children}
