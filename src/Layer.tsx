@@ -1,100 +1,117 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo } from "react";
 import { MapContext } from "./MapContainer";
-import mapboxgl from "mapbox-gl";
+import mapboxgl, { AnyLayout } from "mapbox-gl";
 import { GeoJSONContext } from "./Geojson";
-import { GeoJsonProperties } from "geojson";
 // @ts-ignore
 import * as turf from "@turf/turf";
+import { MapInstance } from "./MapInstance";
 
 type ExcludeValue<T, V> = T extends V ? never : T;
 
-function generateId() {
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const idLength = 6;
-  let id = "";
-  for (let i = 0; i < idLength; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    id += characters.charAt(randomIndex);
-  }
-  return id;
-}
+type Image =
+  | HTMLImageElement
+  | ArrayBufferView
+  | { width: number; height: number; data: Uint8Array | Uint8ClampedArray }
+  | ImageData
+  | ImageBitmap;
 
 export interface LayerProps {
   layers: {
     id: string;
     type: ExcludeValue<mapboxgl.AnyLayer["type"], "custom">;
-    paint: Record<string, string | unknown>;
-    popupTemplate?(properties?: GeoJsonProperties): string;
-    onClick?(properties?: GeoJsonProperties): void;
+    paint?: Record<string, string | unknown>;
+    layout?: AnyLayout | undefined;
+    filter?: any[] | undefined;
+    images?: {
+      name: string;
+      image: ((map: mapboxgl.Map | null) => Image) | Image;
+      options?: {
+        pixelRatio?: number | undefined;
+        sdf?: boolean | undefined;
+        stretchX?: [number, number][] | undefined;
+        stretchY?: [number, number][] | undefined;
+        content?: [number, number, number, number] | undefined;
+      };
+    }[];
+    getMapInstance?(map: mapboxgl.Map, layerId: string): void;
   }[];
 }
 
 export const Layer: React.FC<LayerProps> = ({ layers }) => {
-  const map = useContext(MapContext);
-  const source = useContext(GeoJSONContext);
-  const id = useMemo(generateId, []);
-  const [mapSource, setMapSource] = useState<
-    mapboxgl.GeoJSONSource | undefined
-  >();
+  const context = useContext(MapContext);
+  const geojson = useContext(GeoJSONContext);
+  const mapContainer = useMemo(() => context?.option.container ?? "", []);
+
+  const getMap = useCallback(() => {
+    const map = MapInstance.Pool().getInstanceByMapContainer(
+      mapContainer as string
+    );
+    return map;
+  }, []);
+
+  const getSource = useCallback(() => {
+    const mapSource = getMap()?.getSource(geojson.id);
+    return mapSource;
+  }, []);
 
   useEffect(() => {
-    function init() {
-      map?.once("load", () => {
-        map.addSource(id, {
-          type: "geojson",
-          data: {
-            type: "FeatureCollection",
-            features: [],
-          } as GeoJSON.FeatureCollection<GeoJSON.Geometry>,
-        });
-        setMapSource(map.getSource(id) as mapboxgl.GeoJSONSource);
-        for (const layer of layers) {
-          map.addLayer({
-            id: layer.id,
-            type: layer.type,
-            paint: layer.paint,
-            source: id,
-          });
-          const popupTemplate = layer.popupTemplate;
-          if (popupTemplate) {
-            const popup = new mapboxgl.Popup();
-            map.on("mousemove", layer.id, (e) => {
-              const properties = e.features?.[0].properties;
-              let longlat = e.lngLat;
-              try {
-                longlat = (
-                  turf.center(
-                    turf.multiPolygon(
-                      (e.features?.[0].geometry as GeoJSON.Polygon).coordinates
-                    )
-                  ) as GeoJSON.Feature<GeoJSON.Point>
-                ).geometry.coordinates as any;
-              } catch (err) {}
-              popup
-                .setLngLat(longlat)
-                .setHTML(popupTemplate(properties))
-                .addTo(map);
-            });
-          }
-          const onClick = layer.onClick;
-          if (onClick) {
-            map?.on("click", layer.id, (e) => {
-              const properties = e.features?.[0].properties;
-              onClick(properties);
-            });
+    const map = getMap();
+    if (!map) return;
+    const onLoad = () => {
+      map.addSource(geojson.id, {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: [],
+        } as GeoJSON.FeatureCollection<GeoJSON.Geometry>,
+      });
+
+      for (const layer of layers) {
+        if (layer.images) {
+          for (const image of layer.images) {
+            map.addImage(
+              image?.name,
+              typeof image.image === "function"
+                ? image.image(map)
+                : image.image,
+              image.options
+            );
           }
         }
-      });
-    }
-    init();
-  }, [map]);
+        map.addLayer({
+          ...layer,
+          source: geojson.id,
+        });
+        if (layer.getMapInstance) {
+          layer.getMapInstance(map, layer.id);
+        }
+      }
+    };
+    map.on("load", onLoad);
+    return () => {
+      map.off("load", onLoad);
+    };
+  }, []);
 
   useEffect(() => {
-    if (mapSource && source) {
-      mapSource.setData(source);
+    const map = getMap();
+    if (!map) return;
+    const onLoad = () => {
+      if (!geojson.source) return;
+      const mapSource = getSource();
+      if (mapSource) {
+        (mapSource as mapboxgl.GeoJSONSource).setData(geojson.source);
+      }
+    };
+    const source = getSource();
+    if (source !== undefined) {
+      onLoad();
+    } else {
+      map.on("load", onLoad);
     }
-  }, [mapSource, source]);
-
+    return () => {
+      map.off("load", onLoad);
+    };
+  }, [geojson.id, geojson.source]);
   return null;
 };

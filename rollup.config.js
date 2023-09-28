@@ -26,7 +26,11 @@ export default [
       commonjs(),
       typescript({ tsconfig: "./tsconfig.json" }),
       peerDepsExternal({
-        includeDependencies: ["mapbox-gl", "@turf/turf"],
+        includeDependencies: [
+          "mapbox-gl",
+          "@turf/turf",
+          "@mapbox/mapbox-gl-draw",
+        ],
       }),
     ],
   },

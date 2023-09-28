@@ -1,6 +1,7 @@
 import React, { createContext } from "react";
 
 interface GeoJSONProps {
+  id: string;
   source:
     | GeoJSON.Feature<GeoJSON.Geometry>
     | GeoJSON.FeatureCollection<GeoJSON.Geometry>
@@ -8,16 +9,19 @@ interface GeoJSONProps {
   children?: React.ReactNode;
 }
 
-export const GeoJSONContext = createContext<
-  | GeoJSON.Feature<GeoJSON.Geometry>
-  | GeoJSON.FeatureCollection<GeoJSON.Geometry>
-  | string
-  | null
->(null);
+export const GeoJSONContext = createContext<{
+  id: string;
+  source:
+    | GeoJSON.Feature<GeoJSON.Geometry>
+    | GeoJSON.FeatureCollection<GeoJSON.Geometry>
+    | string;
+}>({ id: "", source: "" });
 
-const Geojson: React.FC<GeoJSONProps> = ({ source, children }) => {
+const Geojson: React.FC<GeoJSONProps> = ({ id, source, children }) => {
   return (
-    <GeoJSONContext.Provider value={source}>{children}</GeoJSONContext.Provider>
+    <GeoJSONContext.Provider value={{ id, source }}>
+      {children}
+    </GeoJSONContext.Provider>
   );
 };
 
