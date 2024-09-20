@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 // @ts-ignore
 import * as turf from "@turf/turf";
 
-function useSync(maps: mapboxgl.Map[]) {
-  const [isSync, setIsSync] = useState(false);
+function useSync(maps: mapboxgl.Map[], isSync: boolean = false) {
+  const [_isSync, setIsSync] = useState(isSync);
 
   useEffect(() => {
     function on() {
@@ -25,7 +25,7 @@ function useSync(maps: mapboxgl.Map[]) {
       const bearing = master.getBearing();
       const pitch = master.getPitch();
 
-      if (!isSync) return;
+      if (!_isSync) return;
       clones.forEach(function (clone) {
         clone.jumpTo({
           center: center,
@@ -51,16 +51,16 @@ function useSync(maps: mapboxgl.Map[]) {
         })
       );
     });
-    if (isSync && maps.length > 1) {
+    if (_isSync && maps.length > 1) {
       moveToMapPosition(maps[0], maps.slice(1));
     }
     on();
     return () => {
       off();
     };
-  }, [maps, isSync]);
+  }, [maps, _isSync]);
 
-  return [isSync, setIsSync] as [
+  return [_isSync, setIsSync] as [
     boolean,
     React.Dispatch<React.SetStateAction<boolean>>
   ];
