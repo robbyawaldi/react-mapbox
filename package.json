@@ -1,6 +1,6 @@
 {
   "name": "@robbyawaldi/react-mapbox",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A React binding of Mapbox",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -48,8 +48,8 @@
   },
   "peerDependencies": {
     "@mapbox/mapbox-gl-draw": "^1.4.3",
-    "@turf/turf": "^6.5.0",
-    "mapbox-gl": "^2.15.0",
+    "@turf/turf": "^7.1.0",
+    "mapbox-gl": "^3.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }
