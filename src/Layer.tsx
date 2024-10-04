@@ -35,9 +35,15 @@ export interface LayerProps {
     }[];
     getMapInstance?(map: mapboxgl.Map, layerId: string): void;
   }[];
+  cluster?: {
+    clusterMaxZoom?: number;
+    clusterRadius?: number;
+    clusterMinPoints?: number;
+    clusterProperties?: object;
+  };
 }
 
-export const Layer: React.FC<LayerProps> = ({ layers }) => {
+export const Layer: React.FC<LayerProps> = ({ layers, cluster }) => {
   const context = useContext(MapContext);
   const geojson = useContext(GeoJSONContext);
   const mapContainer = useMemo(() => context?.option.container ?? "", []);
@@ -64,6 +70,15 @@ export const Layer: React.FC<LayerProps> = ({ layers }) => {
           type: "FeatureCollection",
           features: [],
         } as GeoJSON.FeatureCollection<GeoJSON.Geometry>,
+        ...(cluster
+          ? {
+              cluster: true,
+              clusterMaxZoom: cluster.clusterMaxZoom,
+              clusterMinPoints: cluster.clusterMinPoints,
+              clusterProperties: cluster.clusterProperties,
+              clusterRadius: cluster.clusterRadius,
+            }
+          : {}),
       });
 
       for (const layer of layers) {
