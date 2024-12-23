@@ -9,9 +9,9 @@ export const MapContext = createContext<{
 interface MapContainerProps {
   accessToken: string;
   height: string | number;
-  mapOption: mapboxgl.MapboxOptions;
+  mapOption: mapboxgl.MapOptions;
   children?: React.ReactNode;
-  control?: mapboxgl.Control | mapboxgl.IControl;
+  control?: mapboxgl.IControl;
   positionControl?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   with3DBuilding?: boolean;
 }

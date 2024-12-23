@@ -1,11 +1,10 @@
 import React, { useContext, useEffect, useMemo } from "react";
 import { MapContext } from "./MapContainer";
-import mapboxgl from "mapbox-gl";
 import { MapInstance } from "./MapInstance";
 
 interface FitBoundsProps {
   bounds: mapboxgl.LngLatBoundsLike;
-  options?: mapboxgl.FitBoundsOptions;
+  options?: mapboxgl.MapOptions["fitBoundsOptions"];
 }
 
 const FitBounds: React.FC<FitBoundsProps> = ({ bounds, options }) => {

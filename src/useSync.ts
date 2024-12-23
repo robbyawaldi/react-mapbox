@@ -1,4 +1,3 @@
-import mapboxgl from "mapbox-gl";
 import { useEffect, useState } from "react";
 // @ts-ignore
 import * as turf from "@turf/turf";

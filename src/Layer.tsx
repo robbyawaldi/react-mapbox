@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo } from "react";
 import { MapContext } from "./MapContainer";
-import mapboxgl, { AnyLayout } from "mapbox-gl";
+import { LayoutSpecification } from "mapbox-gl";
 import { GeoJSONContext } from "./Geojson";
 // @ts-ignore
 import * as turf from "@turf/turf";
@@ -8,23 +8,22 @@ import { MapInstance } from "./MapInstance";
 
 type ExcludeValue<T, V> = T extends V ? never : T;
 
-type Image =
-  | HTMLImageElement
-  | ArrayBufferView
-  | { width: number; height: number; data: Uint8Array | Uint8ClampedArray }
-  | ImageData
-  | ImageBitmap;
-
 export interface LayerProps {
   layers: {
     id: string;
     type: ExcludeValue<mapboxgl.AnyLayer["type"], "custom">;
     paint?: Record<string, string | unknown>;
-    layout?: AnyLayout | undefined;
+    layout?: LayoutSpecification | undefined;
     filter?: any[] | undefined;
     images?: {
       name: string;
-      image: ((map: mapboxgl.Map | null) => Image) | Image;
+      image:
+        | ((
+            map: mapboxgl.Map | null
+          ) => HTMLImageElement | ImageBitmap | ImageData)
+        | HTMLImageElement
+        | ImageBitmap
+        | ImageData;
       options?: {
         pixelRatio?: number | undefined;
         sdf?: boolean | undefined;
@@ -84,13 +83,14 @@ export const Layer: React.FC<LayerProps> = ({ layers, cluster }) => {
       for (const layer of layers) {
         if (layer.images) {
           for (const image of layer.images) {
-            map.addImage(
-              image?.name,
-              typeof image.image === "function"
-                ? image.image(map)
-                : image.image,
-              image.options
-            );
+            if (image.image)
+              map.addImage(
+                image?.name,
+                typeof image.image === "function"
+                  ? image.image(map)
+                  : image.image,
+                image.options
+              );
           }
         }
         map.addLayer({
