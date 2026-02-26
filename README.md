@@ -1,4 +1,4 @@
-# @robbyawaldi/react-mapbox
+# @neural-technologies-indonesia/react-mapbox
 
 A lightweight and composable React wrapper for [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/) using declarative components.
 
@@ -9,7 +9,7 @@ A lightweight and composable React wrapper for [Mapbox GL JS](https://docs.mapbo
 Install via npm:
 
 ```bash
-npm install @robbyawaldi/react-mapbox
+npm install @neural-technologies-indonesia/react-mapbox
 ```
 
 You also need to install its peer dependencies:
@@ -38,7 +38,7 @@ import {
   Center,
   Search,
   Draw,
-} from '@robbyawaldi/react-mapbox';
+} from '@neural-technologies-indonesia/react-mapbox';
 import * as turf from "@turf/turf";
 
 const App = () => {
